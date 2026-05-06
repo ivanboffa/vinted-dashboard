@@ -26,11 +26,11 @@ export default function CategoryChart({ data }: { data: CategoryRow[] }) {
   }))
 
   return (
-    <ResponsiveContainer width="100%" height={380}>
+    <ResponsiveContainer width="100%" height={520}>
       <BarChart
         data={formatted}
         layout="vertical"
-        margin={{ top: 5, right: 20, bottom: 5, left: 85 }}
+        margin={{ top: 4, right: 20, bottom: 4, left: 8 }}
       >
         <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" horizontal={false} />
         <XAxis
@@ -46,7 +46,8 @@ export default function CategoryChart({ data }: { data: CategoryRow[] }) {
           tick={{ fill: '#9ca3af', fontSize: 11 }}
           axisLine={false}
           tickLine={false}
-          width={85}
+          width={145}
+          tickFormatter={(v: string) => v.length > 18 ? v.slice(0, 17) + '…' : v}
         />
         <Tooltip
           contentStyle={{ background: '#111827', border: '1px solid #374151', borderRadius: 8 }}
