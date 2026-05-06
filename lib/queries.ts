@@ -19,7 +19,7 @@ export async function getKpis() {
       COUNT(*) FILTER (WHERE status = 'deleted')::int                 AS deleted_count,
       ROUND(
         COUNT(*) FILTER (WHERE status = 'sold')::numeric
-        / NULLIF(COUNT(*) FILTER (WHERE status != 'active'), 0) * 100,
+        / NULLIF(COUNT(*), 0) * 100,
         1
       )::float8                                                       AS sold_rate_pct,
       ROUND(AVG(price) FILTER (WHERE status = 'sold'), 2)::float8     AS avg_sold_price,
