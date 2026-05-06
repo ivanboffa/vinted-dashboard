@@ -88,7 +88,7 @@ export async function getCategories() {
     WHERE  category IS NOT NULL AND TRIM(category) != ''
     GROUP  BY 1, 2
     ORDER  BY total DESC
-    LIMIT  15
+    LIMIT  20
   `
 }
 
