@@ -105,9 +105,8 @@ export async function getBrands() {
         / NULLIF(COUNT(*), 0) * 100, 1
       )::float8                                                       AS sold_pct,
       ROUND(
-        PERCENTILE_CONT(0.5) WITHIN GROUP (
-          ORDER BY EXTRACT(EPOCH FROM (sold_at - vinted_created_at)) / 3600.0
-        ) FILTER (
+        AVG(EXTRACT(EPOCH FROM (sold_at - vinted_created_at)) / 3600.0)
+        FILTER (
           WHERE status = 'sold'
             AND vinted_created_at IS NOT NULL
             AND sold_at > vinted_created_at
@@ -115,8 +114,7 @@ export async function getBrands() {
         1
       )::float8                                                       AS median_hours_to_sell,
       ROUND(
-        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY price)
-        FILTER (WHERE status = 'sold'),
+        AVG(price) FILTER (WHERE status = 'sold'),
         2
       )::float8                                                       AS median_sold_price
     FROM   articles_clean
