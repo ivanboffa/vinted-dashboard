@@ -28,8 +28,8 @@ const COLS: Array<{ key: SortKey; label: string; right?: boolean }> = [
   { key: 'total',                label: 'Totale',       right: true },
   { key: 'sold',                 label: 'Venduti',      right: true },
   { key: 'sold_pct',             label: 'Sell rate',    right: true },
-  { key: 'median_hours_to_sell', label: 'Velocità',     right: true },
-  { key: 'median_sold_price',    label: 'Prezzo med.',  right: true },
+  { key: 'median_hours_to_sell', label: 'Velocità avg', right: true },
+  { key: 'median_sold_price',    label: 'Prezzo avg',   right: true },
 ]
 
 function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
