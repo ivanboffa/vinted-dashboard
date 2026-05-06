@@ -23,7 +23,7 @@ export default function CategoryChart({ data }: { data: CategoryRow[] }) {
   return (
     <div className="space-y-2 py-1">
       {/* legend */}
-      <div className="flex items-center gap-4 pb-2 pl-[152px]">
+      <div className="flex items-center gap-4 pb-2 pl-[168px]">
         <span className="flex items-center gap-1.5 text-xs text-gray-500">
           <span className="inline-block w-3 h-3 rounded-sm bg-indigo-700" />
           Attivi
@@ -39,11 +39,14 @@ export default function CategoryChart({ data }: { data: CategoryRow[] }) {
         const sold    = Number(row.sold)
         const active  = total - sold
 
-        // Safe label: prefer subcategory, fall back to gender, never show "null"
-        const rawName = row.subcategory && row.subcategory !== row.gender
-          ? row.subcategory
-          : row.gender
-        const name = (rawName || '—').replace(/-/g, ' ')
+        // Build a clear label:
+        // - top-level category (subcategory === gender): show just "donna"
+        // - sub-category: show "donna · jeans" so the gender prefix is always visible
+        const sub = row.subcategory && row.subcategory !== row.gender
+          ? String(row.subcategory).replace(/-/g, ' ')
+          : null
+        const gen = (row.gender || '').replace(/-/g, ' ')
+        const name = sub ? `${gen} · ${sub}` : (gen || '—')
 
         const activePct = (active / maxTotal) * 100
         const soldPct   = (sold   / maxTotal) * 100
@@ -58,7 +61,7 @@ export default function CategoryChart({ data }: { data: CategoryRow[] }) {
             title={`${name} — totale: ${total.toLocaleString('it-IT')} | venduti: ${sold.toLocaleString('it-IT')} (${sellRate}) | prezzo medio: ${avgPrice}`}
           >
             {/* fixed-width label — always right-aligned, never overflows */}
-            <div className="w-36 shrink-0 text-right text-xs text-gray-400 truncate capitalize leading-none">
+            <div className="w-40 shrink-0 text-right text-xs text-gray-400 truncate capitalize leading-none">
               {name}
             </div>
 
