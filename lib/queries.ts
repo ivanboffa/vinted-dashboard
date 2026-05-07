@@ -158,7 +158,7 @@ export async function getRecentSold(limit = 40) {
       currency,
       category,
       sold_at,
-      url,
+      'https://www.vinted.it/items/' || vinted_id AS url,
       image_url
     FROM   articles_clean
     WHERE  status  = 'sold'
