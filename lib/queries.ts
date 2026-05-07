@@ -71,24 +71,32 @@ export async function getTrend(days = 30) {
 
 export async function getCategories() {
   return sql`
-    SELECT
-      SPLIT_PART(category, '/', 1)                                    AS gender,
-      COALESCE(
-        NULLIF(SPLIT_PART(category, '/', 2), ''),
-        SPLIT_PART(category, '/', 1)
-      )                                                               AS subcategory,
-      COUNT(*)::int                                                   AS total,
-      COUNT(*) FILTER (WHERE status = 'sold')::int                    AS sold,
-      ROUND(
-        COUNT(*) FILTER (WHERE status = 'sold')::numeric
-        / NULLIF(COUNT(*), 0) * 100, 1
-      )::float8                                                       AS sold_pct,
-      ROUND(AVG(price), 2)::float8                                    AS avg_price
-    FROM   articles_clean
-    WHERE  category IS NOT NULL AND TRIM(category) != ''
-    GROUP  BY 1, 2
-    ORDER  BY total DESC
-    LIMIT  20
+    WITH cats AS (
+      SELECT
+        SPLIT_PART(category, '/', 1)                                  AS gender,
+        COALESCE(
+          NULLIF(SPLIT_PART(category, '/', 2), ''),
+          SPLIT_PART(category, '/', 1)
+        )                                                             AS subcategory,
+        COUNT(*)::int                                                 AS total,
+        COUNT(*) FILTER (WHERE status = 'sold')::int                  AS sold,
+        ROUND(
+          COUNT(*) FILTER (WHERE status = 'sold')::numeric
+          / NULLIF(COUNT(*), 0) * 100, 1
+        )::float8                                                     AS sold_pct,
+        ROUND(AVG(price), 2)::float8                                  AS avg_price,
+        ROW_NUMBER() OVER (
+          PARTITION BY SPLIT_PART(category, '/', 1)
+          ORDER BY COUNT(*) DESC
+        )                                                             AS rn
+      FROM   articles_clean
+      WHERE  category IS NOT NULL AND TRIM(category) != ''
+      GROUP  BY 1, 2
+    )
+    SELECT gender, subcategory, total, sold, sold_pct, avg_price
+    FROM   cats
+    WHERE  rn <= 10
+    ORDER  BY gender, total DESC
   `
 }
 

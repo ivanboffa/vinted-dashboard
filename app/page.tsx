@@ -71,25 +71,25 @@ export default async function Dashboard() {
           </div>
         </section>
 
-        {/* Category + Heatmap */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <section>
-            <h2 className="text-base font-semibold text-gray-300 mb-3">Top categorie</h2>
-            <div className="bg-gray-900 rounded-xl border border-gray-800 p-5">
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              <CategoryChart data={categories as any} />
-            </div>
-          </section>
-          <section>
-            <h2 className="text-base font-semibold text-gray-300 mb-3">
-              Vendite per ora e giorno (ultimi 30gg)
-            </h2>
-            <div className="bg-gray-900 rounded-xl border border-gray-800 p-5">
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              <HeatmapChart data={heatmap as any} />
-            </div>
-          </section>
-        </div>
+        {/* Categories — full width, split by gender */}
+        <section>
+          <h2 className="text-base font-semibold text-gray-300 mb-3">Top categorie</h2>
+          <div className="bg-gray-900 rounded-xl border border-gray-800 p-5">
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            <CategoryChart data={categories as any} />
+          </div>
+        </section>
+
+        {/* Heatmap */}
+        <section>
+          <h2 className="text-base font-semibold text-gray-300 mb-3">
+            Vendite per ora e giorno (ultimi 30gg)
+          </h2>
+          <div className="bg-gray-900 rounded-xl border border-gray-800 p-5">
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            <HeatmapChart data={heatmap as any} />
+          </div>
+        </section>
 
         {/* Brand table */}
         <section>
