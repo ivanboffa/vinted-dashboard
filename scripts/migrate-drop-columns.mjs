@@ -26,10 +26,23 @@ const sql = postgres(url, {
   ssl: { rejectUnauthorized: false }, prepare: false, max: 1,
 })
 
+// articles_clean is a SELECT * view — must drop+recreate around the column drops
+console.log('Dropping articles_clean view...')
+await sql`DROP VIEW IF EXISTS articles_clean`
+
 console.log('Dropping url and description columns...')
 await sql`ALTER TABLE articles DROP COLUMN IF EXISTS url`
 await sql`ALTER TABLE articles DROP COLUMN IF EXISTS description`
 console.log('Columns dropped.')
+
+console.log('Recreating articles_clean view...')
+await sql`
+  CREATE VIEW articles_clean AS
+  SELECT * FROM articles
+  WHERE detection_era = 'post_fix'
+    AND sourced_as_sold = FALSE
+`
+console.log('View recreated.')
 
 // VACUUM reclaims the dead-tuple space so PostgreSQL can reuse it for new rows.
 // VACUUM FULL would shrink the physical file but requires an exclusive lock (downtime).
