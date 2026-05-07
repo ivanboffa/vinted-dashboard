@@ -63,7 +63,7 @@ export default async function Dashboard() {
         {/* Trend chart */}
         <section>
           <h2 className="text-base font-semibold text-gray-300 mb-3">
-            Andamento ultimi 30 giorni
+            Andamento ultimi 7 giorni
           </h2>
           <div className="bg-gray-900 rounded-xl border border-gray-800 p-5">
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -83,7 +83,7 @@ export default async function Dashboard() {
         {/* Heatmap */}
         <section>
           <h2 className="text-base font-semibold text-gray-300 mb-3">
-            Vendite per ora e giorno (ultimi 30gg)
+            Vendite per ora e giorno (ultimi 7gg)
           </h2>
           <div className="bg-gray-900 rounded-xl border border-gray-800 p-5">
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}

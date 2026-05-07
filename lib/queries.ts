@@ -2,15 +2,18 @@ import sql from './db'
 
 // ── helpers ───────────────────────────────────────────────────────────────
 
+const DAYS = 7   // finestra temporale globale del dashboard
+
 function startOfDay(daysAgo: number): string {
   const d = new Date()
   d.setUTCDate(d.getUTCDate() - daysAgo)
   return d.toISOString().split('T')[0] // 'YYYY-MM-DD'
 }
 
-// ── KPI cards ─────────────────────────────────────────────────────────────
+// ── KPI cards — ultimi 7 giorni ───────────────────────────────────────────
 
 export async function getKpis() {
+  const start = startOfDay(DAYS)
   const rows = await sql`
     SELECT
       COUNT(*)::int                                                   AS total_count,
@@ -26,13 +29,14 @@ export async function getKpis() {
       ROUND(AVG(price) FILTER (WHERE status = 'active'), 2)::float8   AS avg_active_price,
       COUNT(*) FILTER (WHERE DATE(first_seen_at) = CURRENT_DATE)::int AS added_today
     FROM articles_clean
+    WHERE first_seen_at >= ${start}::date
   `
   return rows[0]
 }
 
-// ── 30-day trend (zero-filled) ────────────────────────────────────────────
+// ── 7-day trend (zero-filled) ─────────────────────────────────────────────
 
-export async function getTrend(days = 30) {
+export async function getTrend(days = DAYS) {
   const start = startOfDay(days - 1)
   return sql`
     WITH date_series AS (
@@ -67,36 +71,45 @@ export async function getTrend(days = 30) {
   `
 }
 
-// ── Top categories ────────────────────────────────────────────────────────
+// ── Top categories — ultimi 7 giorni ─────────────────────────────────────
 
 export async function getCategories() {
-  // Plain GROUP BY + ORDER BY + LIMIT lets PostgreSQL terminate early via index.
-  // Window-function approaches require a full-table scan before ranking.
+  const start = startOfDay(DAYS)
   return sql`
-    SELECT
-      SPLIT_PART(category, '/', 1)                                    AS gender,
-      COALESCE(
-        NULLIF(SPLIT_PART(category, '/', 2), ''),
-        SPLIT_PART(category, '/', 1)
-      )                                                               AS subcategory,
-      COUNT(*)::int                                                   AS total,
-      COUNT(*) FILTER (WHERE status = 'sold')::int                    AS sold,
-      ROUND(
-        COUNT(*) FILTER (WHERE status = 'sold')::numeric
-        / NULLIF(COUNT(*), 0) * 100, 1
-      )::float8                                                       AS sold_pct,
-      ROUND(AVG(price), 2)::float8                                    AS avg_price
-    FROM   articles_clean
-    WHERE  category IS NOT NULL AND TRIM(category) != ''
-    GROUP  BY 1, 2
-    ORDER  BY total DESC
-    LIMIT  20
+    WITH cats AS (
+      SELECT
+        SPLIT_PART(category, '/', 1)                                  AS gender,
+        COALESCE(
+          NULLIF(SPLIT_PART(category, '/', 2), ''),
+          SPLIT_PART(category, '/', 1)
+        )                                                             AS subcategory,
+        COUNT(*)::int                                                 AS total,
+        COUNT(*) FILTER (WHERE status = 'sold')::int                  AS sold,
+        ROUND(
+          COUNT(*) FILTER (WHERE status = 'sold')::numeric
+          / NULLIF(COUNT(*), 0) * 100, 1
+        )::float8                                                     AS sold_pct,
+        ROUND(AVG(price), 2)::float8                                  AS avg_price,
+        ROW_NUMBER() OVER (
+          PARTITION BY SPLIT_PART(category, '/', 1)
+          ORDER BY COUNT(*) DESC
+        )                                                             AS rn
+      FROM   articles_clean
+      WHERE  category IS NOT NULL AND TRIM(category) != ''
+        AND  first_seen_at >= ${start}::date
+      GROUP  BY 1, 2
+    )
+    SELECT gender, subcategory, total, sold, sold_pct, avg_price
+    FROM   cats
+    WHERE  rn <= 10
+    ORDER  BY gender, total DESC
   `
 }
 
-// ── Brand velocity ────────────────────────────────────────────────────────
+// ── Brand velocity — ultimi 7 giorni ─────────────────────────────────────
 
 export async function getBrands() {
+  const start = startOfDay(DAYS)
   return sql`
     SELECT
       brand,
@@ -121,16 +134,17 @@ export async function getBrands() {
       )::float8                                                       AS median_sold_price
     FROM   articles_clean
     WHERE  brand IS NOT NULL AND TRIM(brand) != ''
+      AND  first_seen_at >= ${start}::date
     GROUP  BY brand
-    HAVING COUNT(*) >= 5
+    HAVING COUNT(*) >= 3
     ORDER  BY sold DESC, total DESC
     LIMIT  20
   `
 }
 
-// ── Sales heatmap (7 days × 24 hours) ────────────────────────────────────
+// ── Sales heatmap — ultimi 7 giorni ──────────────────────────────────────
 
-export async function getHeatmap(days = 30) {
+export async function getHeatmap(days = DAYS) {
   const cutoff = startOfDay(days)
   return sql`
     SELECT
@@ -149,6 +163,7 @@ export async function getHeatmap(days = 30) {
 // ── Recent sold ───────────────────────────────────────────────────────────
 
 export async function getRecentSold(limit = 40) {
+  const start = startOfDay(DAYS)
   return sql`
     SELECT
       vinted_id,
@@ -163,6 +178,7 @@ export async function getRecentSold(limit = 40) {
     FROM   articles_clean
     WHERE  status  = 'sold'
       AND  sold_at IS NOT NULL
+      AND  sold_at >= ${start}::date
     ORDER  BY sold_at DESC
     LIMIT  ${limit}
   `
